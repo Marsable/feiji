@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+ <head> 
+  <meta charset="utf-8" /> 
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" /> 
+  <meta name="viewport" content="width=device-width, initial-scale=1" /> 
+  <!-- 新 Bootstrap 核心 CSS 文件 --> 
+  <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css" /> 
+   <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
+   <script src="https://cdn.bootcss.com/toastr.js/latest/js/toastr.min.js"></script>
+
+<link rel="stylesheet" type="text/css" href="https://cdn.bootcss.com/toastr.js/latest/css/toastr.min.css">
+
+ </head> 
+ <body> 
+  <div class="container"> 
+   <h1 class="page-header">主界面</h1> 
+    <div class="form-group">
+    <label for="email" class="col-sm-2 control-label">座位选择，只有一人时，方式有效</label>	
+    <div class="col-sm-6">	
+    	
+		<select  id='feiji' class="form-control">
+		<option value="0"  >请选择飞机</option>
+		 {% for k in feiji %}
+			<option value="{{ k.id }}">{{ k.banhao }}</option>
+		 {% endfor %}
+		</select>
+		<select  id='num' class="form-control">
+		<option value="1"  >1人</option>
+		<option value="2"  >2人</option>
+		<option value="3"  >3人</option>
+		
+		</select>
+		<select  id='type' class="form-control">
+		<option value="0"  >随便</option>
+		<option value="1"  >过道</option>
+		<option value="2"  >靠窗</option>
+		
+		</select>
+		 <div class="row">
+			<div class="btn btn-danger btn-lg col-sm-3 xuanze "   >选择</div> 
+			<div class="btn btn-danger btn-lg col-sm-3 chongzhi "   >重置该飞机</div> 
+    </div>
+	<div   class='info'>您的机票:</div> 
+    </div>
+	
+    <div class="col-sm-4 tips"></div>
+</div>
+  <div class='feiji'>
+   {% for k in hang %}
+		<div class='heng'>
+			 {% for kk in lie %}
+			<div class='lie' id="{{k}}{{kk}}">{{k}}{{kk}}</div>
+			
+			{% endfor %}
+		</div>
+	 {% endfor %}
+	
+	</div>
+  </div>    
+ </body>
+ <style>
+	.row{
+	margin-top:30px;}
+	.feiji{
+	width:800px;
+	margin:300px auto;
+	background:gray;}
+	.heng{
+	width:800px;
+	height:100px;
+	display:flex;
+	flex-direction:row;}
+	.lie{
+	width:50px;
+	height:50px;
+	line-height:50px;
+	text-align:center;
+	background:white;
+	margin:25px auto;}
+ </style>
+ <script>
+// $('.feiji').hide()
+
+	function getinfo(id){
+	  $.post('/jipiao/getinfo',{id:id},function(res){
+	  var txt=''
+	  for(var s in res){
+			txt=txt+','+res[s].fields.zuowei
+	  }
+	  console.log(txt)
+	 $('.info').text('您的机票：'+txt)
+	  })
+	
+	
+	
+	}
+
+    $('.login').click(function(){
+	
+	$('input').each(function(){
+	if(!$(this).val()){
+		toastr.error($(this).attr('placeholder'));
+			return false;
+	}})
+	var mima=$('#mima').val()
+	var uname=$('#uname').val()
+	
+	$.post('/user/loginapi',{mima:mima,uname:uname},function(res){
+		if(res=='ok'){
+			toastr.success('登入成功')
+			location.href='/jipiao/index'
+		}
+		else{
+		toastr.error('登入失败')
+		}
+	  
+	  
+	  })
+	
+	})
+	$('#feiji').change(function(){
+		var id=$(this).val()
+		if(id>0){
+			
+			getfeiji(id)
+			
+		}
+		else{
+		$('.feiji').hide()
+		}
+	
+	})
+	
+	function getfeiji(id){
+			getinfo(id)
+			$.post('/jipiao/getfeiji',{id:id},function(res){
+				for (var s in res){
+		         
+					if(res[s]==0){
+							$('#'+s).css('background','green')
+		   
+						}
+					else{
+						$('#'+s).css('background','red')
+						}
+						}
+			  })
+			}
+ $('.xuanze').click(function(){
+		var id=$('#feiji').val()
+		var num=$('#num').val()
+		var type=$('#type').val()
+		if(id<1){
+		toastr.error('请选择航班')
+		return false;
+		}
+		$.post('/jipiao/dingpiao',{id:id,num:num,type:type},function(res){
+			if(res=='none'){
+			toastr.error('订票失败')
+			}
+			else{
+				toastr.success('您选择了飞机'+res)
+				getfeiji(id)
+			}
+			
+		})
+	})
+ $('.chongzhi').click(function(){
+		var id=$('#feiji').val()
+		
+		if(id<1){
+		toastr.error('请选择航班')
+		return false;
+		}
+		var r=confirm("确定重置该航班？")
+		if (r==true)
+			{
+  
+			}
+			else
+			{
+			return false
+				}
+  
+		
+		
+		$.post('/jipiao/chongzhi',{id:id,},function(res){
+			
+				getfeiji(id)
+			
+			
+		})
+	})
+	var jid=$('#feiji').val()
+	if(jid>0){
+	getfeiji(jid)
+	}
+	
+	
+ </script>
+ 
+ 
+ 
+ 
+</html>
